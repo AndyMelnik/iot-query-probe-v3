@@ -1,0 +1,32 @@
+# fly.io configuration for IoT Query Probe
+app = "your-app-name"  # Change to your fly.io app name
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  STREAMLIT_PORT = "8501"
+  AUTH_SERVER_PORT = "8000"
+  BIND_ADDRESS = "0.0.0.0"
+  CREDENTIALS_DIR = "/tmp/iot-query-probe"
+
+# Streamlit app (main web interface)
+[http_service]
+  internal_port = 8501
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 80
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+

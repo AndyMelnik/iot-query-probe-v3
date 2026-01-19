@@ -1,0 +1,20 @@
+# Web frameworks
+fastapi>=0.115.14  # Includes starlette security fixes
+uvicorn>=0.32.0
+pydantic>=2.10.0
+
+# Database
+pg8000==1.31.5
+
+# Authentication
+pyjwt==2.10.1
+cryptography==44.0.1
+
+# Data processing (for export functionality)
+pandas==2.2.0
+openpyxl==3.1.5
+
+# Note: Streamlit removed - using Next.js frontend instead
+# If legacy Streamlit support is needed, add:
+# streamlit==1.40.0
+# plotly==5.24.0

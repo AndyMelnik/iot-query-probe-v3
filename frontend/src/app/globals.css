@@ -1,0 +1,360 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* ============================================
+   * Dark Theme (Default)
+   * Primary: #1565C0
+   * ============================================ */
+  :root {
+    /* Dark Theme */
+    --background: 213 32% 10%;
+    --foreground: 210 40% 98%;
+
+    --card: 213 32% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 213 32% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Primary Blue: #1565C0 */
+    --primary: 210 77% 43%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 213 32% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 213 32% 18%;
+    --muted-foreground: 210 20% 60%;
+
+    /* Light Blue Accent: #42A5F5 */
+    --accent: 207 90% 61%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 213 32% 20%;
+    --input: 213 32% 20%;
+    --ring: 210 77% 43%;
+
+    --radius: 0.5rem;
+    
+    /* Brand colors */
+    --brand-blue: 210 77% 43%;
+    --brand-light-blue: 207 90% 61%;
+    --brand-dark-blue: 214 84% 34%;
+    --brand-success: 122 39% 49%;
+    --brand-warning: 36 100% 50%;
+    --brand-error: 4 90% 58%;
+  }
+
+  /* ============================================
+   * Light Theme
+   * ============================================ */
+  .light {
+    /* Light background: #F5F8FA */
+    --background: 204 33% 97%;
+    --foreground: 213 32% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 213 32% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 213 32% 10%;
+
+    /* Primary Blue: #1565C0 */
+    --primary: 210 77% 43%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Light gray background for secondary: #ECEFF1 */
+    --secondary: 200 18% 94%;
+    --secondary-foreground: 213 32% 10%;
+
+    --muted: 200 18% 94%;
+    --muted-foreground: 213 20% 46%;
+
+    /* Light Blue Accent: #42A5F5 */
+    --accent: 207 90% 61%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 4 90% 58%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border: #E0E0E0 */
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 210 77% 43%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Roboto', system-ui, sans-serif;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  h1 { font-size: 2rem; line-height: 1.2; }
+  h2 { font-size: 1.5rem; line-height: 1.3; }
+  h3 { font-size: 1.25rem; line-height: 1.4; }
+  h4 { font-size: 1rem; line-height: 1.5; }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted)) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(var(--primary));
+  }
+
+  /* Glass Effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .light .glass {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  /* Brand Gradient */
+  .brand-gradient {
+    background: linear-gradient(135deg, hsl(var(--brand-dark-blue)) 0%, hsl(var(--brand-blue)) 50%, hsl(var(--brand-light-blue)) 100%);
+  }
+
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(var(--background), var(--background)) padding-box,
+      linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent))) border-box;
+    border: 1px solid transparent;
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Button Hover Effect */
+  .btn-hover {
+    @apply transition-all duration-200;
+  }
+
+  .btn-hover:hover {
+    @apply shadow-lg;
+    transform: translateY(-1px);
+  }
+
+  .btn-hover:active {
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+ * ENTITY COLORS
+ * ============================================ */
+.entity-objects { --entity-color: 210 77% 43%; }      /* Blue */
+.entity-vehicles { --entity-color: 207 90% 61%; }     /* Light Blue */
+.entity-employees { --entity-color: 122 39% 49%; }    /* Green */
+.entity-departments { --entity-color: 36 100% 50%; }  /* Orange */
+.entity-groups { --entity-color: 291 64% 42%; }       /* Purple */
+.entity-tags { --entity-color: 330 81% 60%; }         /* Pink */
+.entity-geofences { --entity-color: 4 90% 58%; }      /* Red */
+.entity-pois { --entity-color: 173 80% 40%; }         /* Teal */
+.entity-tracking { --entity-color: 214 84% 34%; }     /* Dark Blue */
+.entity-inputs { --entity-color: 45 93% 47%; }        /* Yellow */
+.entity-states { --entity-color: 262 52% 47%; }       /* Indigo */
+
+/* Legacy entity colors */
+.entity-object { --entity-color: 210 77% 43%; }
+.entity-vehicle { --entity-color: 207 90% 61%; }
+.entity-employee { --entity-color: 122 39% 49%; }
+.entity-department { --entity-color: 36 100% 50%; }
+.entity-group { --entity-color: 291 64% 42%; }
+.entity-device { --entity-color: 199 89% 48%; }
+.entity-sensor { --entity-color: 47 96% 53%; }
+.entity-zone { --entity-color: 4 90% 58%; }
+.entity-location { --entity-color: 173 80% 40%; }
+
+/* ============================================
+ * DRAG AND DROP STYLES
+ * ============================================ */
+.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+.drop-target {
+  @apply ring-2 ring-offset-2 ring-offset-background;
+  ring-color: hsl(var(--primary));
+}
+
+.droppable-active {
+  background-color: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
+}
+
+/* ============================================
+ * ANIMATIONS
+ * ============================================ */
+@keyframes dropIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-drop-in {
+  animation: dropIn 0.2s ease-out;
+}
+
+@keyframes pulse-blue {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px hsl(var(--primary) / 0);
+  }
+}
+
+.animate-pulse-blue {
+  animation: pulse-blue 2s infinite;
+}
+
+/* ============================================
+ * LEAFLET MAP STYLES
+ * ============================================ */
+.leaflet-container {
+  font-family: 'Roboto', system-ui, sans-serif;
+  background: hsl(var(--muted));
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.leaflet-popup-content {
+  margin: 12px;
+  font-size: 14px;
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--card));
+}
+
+.leaflet-control-zoom {
+  border: 1px solid hsl(var(--border)) !important;
+  border-radius: 0.5rem !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+  border-bottom-color: hsl(var(--border)) !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: hsl(var(--primary)) !important;
+  color: white !important;
+}
+
+.leaflet-control-attribution {
+  background: hsl(var(--background) / 0.8) !important;
+  color: hsl(var(--muted-foreground)) !important;
+  font-size: 10px;
+}
+
+.leaflet-control-attribution a {
+  color: hsl(var(--primary)) !important;
+}
+
+/* ============================================
+ * COMPONENT OVERRIDES
+ * ============================================ */
+
+/* Buttons */
+.btn-primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  @apply transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-secondary-foreground hover:bg-secondary/80;
+  @apply transition-all duration-200;
+}
+
+/* Cards */
+.card-styled {
+  @apply bg-card rounded-lg border border-border;
+  @apply shadow-sm hover:shadow-md transition-shadow duration-200;
+}
+
+/* Inputs */
+.input-styled {
+  @apply bg-background border border-input rounded-md;
+  @apply focus:ring-2 focus:ring-primary focus:border-primary;
+  @apply transition-all duration-200;
+}
+
+/* Tables */
+.table-styled th {
+  @apply bg-muted/50 font-medium text-muted-foreground;
+}
+
+.table-styled tr:hover {
+  @apply bg-muted/30;
+}
+
+/* Sidebar */
+.sidebar-styled {
+  @apply bg-card border-r border-border;
+}
+
+.sidebar-item {
+  @apply px-3 py-2 rounded-md transition-colors duration-200;
+  @apply hover:bg-muted cursor-pointer;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10 text-primary;
+}

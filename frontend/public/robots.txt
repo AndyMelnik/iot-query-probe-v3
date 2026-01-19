@@ -1,0 +1,4 @@
+# IoT Query Probe - Report Builder
+User-agent: *
+Allow: /
+

@@ -1,0 +1,107 @@
+# Render Blueprint - IoT Query Probe (Report Builder)
+# https://render.com/docs/blueprint-spec
+#
+# ============================================================================
+# Navixy App Connect Integration
+# ============================================================================
+# Access URL: https://dashboard.tools.datahub.navixy.com/?session_key=XXX&target=https://YOUR_APP_URL
+#
+# Flow:
+# 1. User accesses app through Navixy URL above
+# 2. Navixy validates session_key
+# 3. Navixy calls POST /api/auth/login with database credentials
+# 4. Auth server stores credentials, returns JWT token
+# 5. Navixy stores token in localStorage and redirects user to app
+# 6. App uses stored credentials to connect to IoT database
+#
+# ============================================================================
+# Deployment Steps
+# ============================================================================
+# 1. Fork/clone this repo to your GitHub account
+# 2. Go to https://dashboard.render.com/blueprints
+# 3. Click "New Blueprint Instance"
+# 4. Connect to your GitHub repo
+# 5. Set the required environment variables (especially JWT_SECRET)
+# 6. Deploy!
+#
+# After deployment, your app URL will be:
+# https://iot-query-probe.onrender.com (or your custom domain)
+
+services:
+  - type: web
+    name: iot-query-probe
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter  # Use 'starter' ($7/mo) or higher for production
+    region: oregon  # Choose closest to your users
+    healthCheckPath: /health
+    
+    # Build settings
+    dockerCommand: ./start.sh
+    
+    # Environment variables
+    envVars:
+      # REQUIRED: JWT signing secret (auto-generated)
+      - key: JWT_SECRET
+        generateValue: true
+      
+      # Port configuration (Render sets PORT automatically)
+      - key: PORT
+        value: "10000"
+      - key: BACKEND_PORT
+        value: "8001"
+      - key: FRONTEND_PORT
+        value: "3000"
+      
+      # Credential storage
+      - key: CREDENTIALS_DIR
+        value: "/tmp/iot-query-probe"
+      
+      # CORS - restrict in production to your domains
+      # Example: https://your-app.onrender.com,https://dashboard.tools.datahub.navixy.com
+      - key: CORS_ORIGINS
+        value: "*"
+      
+      # Iframe embedding - allow embedding from Navixy dashboard
+      # Format: space-separated list of allowed origins
+      - key: FRAME_ANCESTORS
+        value: "'self' https://dashboard.tools.datahub.navixy.com https://*.navixy.com"
+      
+      # Security settings
+      - key: DEBUG_MODE
+        value: "false"
+      - key: DEV_MODE
+        value: "false"
+      
+      # Rate limiting
+      - key: RATE_LIMIT_REQUESTS
+        value: "100"
+      - key: RATE_LIMIT_WINDOW
+        value: "60"
+      
+      # Node.js settings
+      - key: NODE_ENV
+        value: "production"
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+# ============================================================================
+# Post-Deployment Checklist
+# ============================================================================
+# After deploying, verify:
+# 
+# 1. ✅ Health check: curl https://YOUR_APP.onrender.com/health
+# 2. ✅ Auth status: curl https://YOUR_APP.onrender.com/api/auth/status
+# 3. ✅ CORS is restricted (update CORS_ORIGINS if using "*")
+# 4. ✅ Register your app URL with Navixy for App Connect
+#
+# ============================================================================
+# Resource Requirements
+# ============================================================================
+# Minimum: Starter plan ($7/mo) - 512MB RAM, shared CPU
+# Recommended: Standard plan ($25/mo) for production traffic
+#
+# The app uses:
+# - ~200MB RAM for FastAPI backend
+# - ~300MB RAM for Next.js frontend
+# - Nginx as reverse proxy (minimal overhead)

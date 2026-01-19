@@ -1,0 +1,163 @@
+# ===========================================
+# Python
+# ===========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ===========================================
+# Environment & Secrets (CRITICAL - NEVER COMMIT)
+# ===========================================
+.env
+.env.*
+.env.local
+.env.*.local
+*.env
+.envrc
+
+# Credentials (should never be in repo)
+*.pem
+*.key
+*.p12
+*.pfx
+secrets.toml
+secrets.json
+credentials.json
+service-account*.json
+
+# ===========================================
+# Node.js / Frontend
+# ===========================================
+node_modules/
+.next/
+out/
+.nuxt/
+dist/
+.cache/
+*.tsbuildinfo
+.npm
+.yarn/cache
+.yarn/unplugged
+.pnp.*
+
+# ===========================================
+# IDE & Editor
+# ===========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*~
+.project
+.classpath
+.settings/
+*.sublime-*
+
+# ===========================================
+# OS Files
+# ===========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===========================================
+# Logs & Debug
+# ===========================================
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ===========================================
+# Testing & Coverage
+# ===========================================
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+coverage/
+*.cover
+*.coverage
+.hypothesis/
+
+# ===========================================
+# Temporary Files
+# ===========================================
+tmp/
+temp/
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# ===========================================
+# Build Artifacts
+# ===========================================
+*.pyc
+*.pyo
+*.pyd
+.installed.cfg
+MANIFEST
+
+# ===========================================
+# Local Development
+# ===========================================
+.local/
+local_settings.py
+db.sqlite3
+*.db
+
+# ===========================================
+# Security - Additional Patterns
+# ===========================================
+# Private keys
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+*.ppk
+
+# Token files
+.token
+token.txt
+*_token.json
+
+# AWS credentials
+.aws/
+aws_credentials
+
+# Google Cloud
+.gcloud/
+gcloud.json
+
+# Azure
+.azure/
+azure.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Ansible
+*.retry
