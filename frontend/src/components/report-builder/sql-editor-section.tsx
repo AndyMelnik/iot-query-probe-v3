@@ -13,8 +13,23 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// SQL syntax highlighting (simple version)
+// HTML escape function to prevent XSS
+function escapeHtml(text: string): string {
+  const htmlEscapes: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char);
+}
+
+// SQL syntax highlighting (simple version) - with XSS protection
 function highlightSql(sql: string): string {
+  // SECURITY: Escape HTML first to prevent XSS
+  let highlighted = escapeHtml(sql);
+  
   const keywords = [
     'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'BETWEEN',
     'LIKE', 'ILIKE', 'IS', 'NULL', 'TRUE', 'FALSE', 'AS', 'ON',
@@ -25,14 +40,13 @@ function highlightSql(sql: string): string {
     'UNION', 'INTERSECT', 'EXCEPT', 'ALL', 'EXISTS', 'ANY', 'WITH'
   ];
   
-  let highlighted = sql;
   keywords.forEach(kw => {
     const regex = new RegExp(`\\b(${kw})\\b`, 'gi');
     highlighted = highlighted.replace(regex, `<span class="text-primary font-semibold">$1</span>`);
   });
   
-  // Highlight strings
-  highlighted = highlighted.replace(/'([^']*)'/g, '<span class="text-green-400">\'$1\'</span>');
+  // Highlight strings (already escaped, so use &#39; for quotes)
+  highlighted = highlighted.replace(/&#39;([^&#39;]*)&#39;/g, '<span class="text-green-400">&#39;$1&#39;</span>');
   
   // Highlight numbers
   highlighted = highlighted.replace(/\b(\d+\.?\d*)\b/g, '<span class="text-amber-400">$1</span>');
