@@ -240,14 +240,6 @@ LIMIT 1000`}
           )}
         </div>
 
-        {/* Schema reference hint */}
-        <div className="mt-4 rounded-lg border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
-          <p className="font-medium">Available schemas:</p>
-          <ul className="mt-1 space-y-0.5">
-            <li>• <code className="text-primary">raw_business_data</code> — objects, vehicles, employees, groups, departments, geofences, pois, tags</li>
-            <li>• <code className="text-primary">raw_telematics_data</code> — tracking_data_core, inputs, states</li>
-          </ul>
-        </div>
       </div>
     </div>
   );
