@@ -10,7 +10,6 @@ import {
   Map as MapIcon,
   ChevronDown,
   ChevronUp,
-  Layers,
 } from "lucide-react";
 import { useReportStore } from "@/store/report-store";
 import { DataTable } from "./data-table";
@@ -32,19 +31,9 @@ export function ResultsPanel() {
   const chartRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<HTMLDivElement>(null);
 
-  // Always show the visualization panel structure
+  // Don't show results panel until a primary entity is selected
   if (!config.primaryEntity) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-12">
-        <div className="text-center">
-          <Layers className="mx-auto h-16 w-16 text-primary/30" />
-          <h3 className="mt-4 text-lg font-semibold">Start Building Your Report</h3>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Select an entity from the sidebar to begin. Click on fields to add them to your report.
-          </p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (isLoading) {
