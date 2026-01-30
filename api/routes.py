@@ -686,6 +686,263 @@ async def execute_query_dev(body: QueryExecuteRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=400, detail=error_msg)
 
 
+# =============================================================================
+# RAW SQL EXECUTION ENDPOINTS (Advanced Mode)
+# =============================================================================
+
+class RawSqlRequest(BaseModel):
+    """Request for raw SQL execution."""
+    sql: str
+    databaseUrl: Optional[str] = None  # For dev mode
+    
+    @field_validator('sql')
+    @classmethod
+    def validate_sql(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError('SQL query cannot be empty')
+        
+        upper_sql = v.upper().strip()
+        
+        # Only allow SELECT queries
+        if not upper_sql.startswith('SELECT'):
+            raise ValueError('Only SELECT queries are allowed')
+        
+        # Block dangerous keywords
+        forbidden = ['INSERT', 'UPDATE', 'DELETE', 'DROP', 'CREATE', 'ALTER', 
+                     'TRUNCATE', 'GRANT', 'REVOKE', 'EXEC', 'EXECUTE', 'COPY',
+                     'VACUUM', 'REINDEX', 'CLUSTER', 'COMMENT', 'SECURITY']
+        for keyword in forbidden:
+            # Check for keyword as separate word (not part of column names)
+            if f' {keyword} ' in f' {upper_sql} ' or upper_sql.startswith(f'{keyword} '):
+                raise ValueError(f'{keyword} operations are not allowed')
+        
+        # Limit query length
+        if len(v) > 50000:
+            raise ValueError('Query too long (max 50,000 characters)')
+        
+        return v.strip()
+
+
+def _infer_column_type(value) -> str:
+    """Infer column type from first non-null value."""
+    if value is None:
+        return 'string'
+    if isinstance(value, bool):
+        return 'boolean'
+    if isinstance(value, (int, float)):
+        return 'number'
+    if hasattr(value, 'isoformat'):
+        return 'datetime'
+    return 'string'
+
+
+@router.post("/query/execute-raw")
+async def execute_raw_sql(request: Request, body: RawSqlRequest) -> Dict[str, Any]:
+    """
+    Execute a raw SQL query (SELECT only).
+    
+    Uses credentials stored from Navixy App Connect authentication.
+    Only SELECT queries are allowed for security.
+    """
+    start_time = time.time()
+    
+    try:
+        conn = _get_db_connection(request)
+        
+        try:
+            # Set query timeout
+            conn.run("SET statement_timeout = '300000'")  # 5 minutes
+            conn.run("SET lock_timeout = '5000'")
+            
+            # Execute the raw SQL
+            result = conn.run(body.sql)
+            
+            # Get column names
+            columns = []
+            if conn.columns:
+                for col in conn.columns:
+                    if isinstance(col, dict):
+                        columns.append(col.get('name', str(col)))
+                    elif hasattr(col, 'name'):
+                        columns.append(col.name)
+                    elif isinstance(col, (list, tuple)) and len(col) > 0:
+                        columns.append(str(col[0]))
+                    else:
+                        columns.append(str(col))
+            
+            # Build rows
+            rows = []
+            first_row_types = {}
+            
+            if result and columns:
+                for row_idx, row in enumerate(result):
+                    row_dict = {}
+                    row_len = len(row) if hasattr(row, '__len__') else 0
+                    
+                    for i, col in enumerate(columns):
+                        if i < row_len:
+                            value = row[i]
+                            
+                            # Infer type from first non-null value
+                            if row_idx == 0 or col not in first_row_types:
+                                first_row_types[col] = _infer_column_type(value)
+                            
+                            # Convert datetime objects
+                            if hasattr(value, 'isoformat'):
+                                value = value.isoformat()
+                            
+                            row_dict[col] = value
+                        else:
+                            row_dict[col] = None
+                    
+                    rows.append(row_dict)
+            
+            execution_time = (time.time() - start_time) * 1000
+            
+            # Build column metadata
+            column_info = []
+            for col_name in columns:
+                col_type = first_row_types.get(col_name, 'string')
+                column_info.append({
+                    "name": col_name,
+                    "displayName": col_name.replace('_', ' ').title(),
+                    "type": col_type,
+                })
+            
+            include_sql = os.getenv("DEBUG_MODE", "false").lower() == "true"
+            
+            response = {
+                "columns": column_info,
+                "rows": rows,
+                "totalRows": len(rows),
+                "executionTime": execution_time,
+            }
+            
+            if include_sql:
+                response["sql"] = body.sql
+            
+            return response
+            
+        finally:
+            conn.close()
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        logger.error(f"Raw SQL execution error: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        error_msg = str(e)
+        if "password" in error_msg.lower() or "host" in error_msg.lower():
+            error_msg = "Database connection error"
+        raise HTTPException(status_code=400, detail=error_msg)
+
+
+@router.post("/query/execute-raw-dev")
+async def execute_raw_sql_dev(body: RawSqlRequest) -> Dict[str, Any]:
+    """
+    Execute a raw SQL query using direct database URL (dev mode only).
+    
+    This endpoint is disabled by default. Set DEV_MODE=true to enable.
+    Only SELECT queries are allowed for security.
+    """
+    _check_dev_mode()
+    
+    if not body.databaseUrl:
+        raise HTTPException(status_code=400, detail="Database URL required for dev mode")
+    
+    start_time = time.time()
+    
+    try:
+        conn = _get_db_connection_from_url(body.databaseUrl)
+        
+        try:
+            # Set query timeout
+            conn.run("SET statement_timeout = '300000'")  # 5 minutes
+            conn.run("SET lock_timeout = '5000'")
+            
+            # Execute the raw SQL
+            result = conn.run(body.sql)
+            
+            # Get column names
+            columns = []
+            if conn.columns:
+                for col in conn.columns:
+                    if isinstance(col, dict):
+                        columns.append(col.get('name', str(col)))
+                    elif hasattr(col, 'name'):
+                        columns.append(col.name)
+                    elif isinstance(col, (list, tuple)) and len(col) > 0:
+                        columns.append(str(col[0]))
+                    else:
+                        columns.append(str(col))
+            
+            # Build rows
+            rows = []
+            first_row_types = {}
+            
+            if result and columns:
+                for row_idx, row in enumerate(result):
+                    row_dict = {}
+                    row_len = len(row) if hasattr(row, '__len__') else 0
+                    
+                    for i, col in enumerate(columns):
+                        if i < row_len:
+                            value = row[i]
+                            
+                            # Infer type from first non-null value
+                            if row_idx == 0 or col not in first_row_types:
+                                first_row_types[col] = _infer_column_type(value)
+                            
+                            # Convert datetime objects
+                            if hasattr(value, 'isoformat'):
+                                value = value.isoformat()
+                            
+                            row_dict[col] = value
+                        else:
+                            row_dict[col] = None
+                    
+                    rows.append(row_dict)
+            
+            execution_time = (time.time() - start_time) * 1000
+            
+            # Build column metadata
+            column_info = []
+            for col_name in columns:
+                col_type = first_row_types.get(col_name, 'string')
+                column_info.append({
+                    "name": col_name,
+                    "displayName": col_name.replace('_', ' ').title(),
+                    "type": col_type,
+                })
+            
+            return {
+                "columns": column_info,
+                "rows": rows,
+                "totalRows": len(rows),
+                "executionTime": execution_time,
+                "sql": body.sql,  # Always include SQL in dev mode
+            }
+            
+        finally:
+            conn.close()
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        logger.error(f"Raw SQL dev execution error: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        error_msg = str(e)
+        if "password" in error_msg.lower() or "host" in error_msg.lower():
+            error_msg = "Database connection error"
+        raise HTTPException(status_code=400, detail=error_msg)
+
+
+# =============================================================================
+# QUERY VALIDATION ENDPOINT
+# =============================================================================
+
 @router.post("/query/validate")
 async def validate_query(request: ReportConfigRequest) -> Dict[str, Any]:
     """Validate a report configuration without executing."""

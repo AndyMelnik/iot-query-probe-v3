@@ -18,6 +18,7 @@ import {
   MapConfig,
   VisualizationType,
   AggregationType,
+  QueryMode,
 } from '@/types/entities';
 import {
   isAuthenticated,
@@ -39,6 +40,10 @@ interface ReportState {
   databaseUrl: string;
   isConnected: boolean;
   connectionError: string | null;
+  
+  // Query Mode: 'standard' (visual builder) or 'advanced' (SQL editor)
+  queryMode: QueryMode;
+  customSql: string;
   
   // Current report configuration
   config: ReportConfig;
@@ -113,6 +118,10 @@ interface ReportState {
   setDatabaseUrl: (url: string) => void;
   testConnection: () => Promise<boolean>;
   disconnect: () => void;
+  
+  // Query mode
+  setQueryMode: (mode: QueryMode) => void;
+  setCustomSql: (sql: string) => void;
 }
 
 const initialConfig: ReportConfig = {
@@ -149,6 +158,11 @@ export const useReportStore = create<ReportState>()(
         databaseUrl: '',
         isConnected: false,
         connectionError: null,
+        
+        // Initial state - Query mode
+        queryMode: 'standard',
+        customSql: '',
+        
         config: { ...initialConfig },
         queryResult: null,
         isLoading: false,
@@ -520,6 +534,10 @@ export const useReportStore = create<ReportState>()(
           connectionError: null,
           queryResult: null 
         }),
+        
+        // Query mode actions
+        setQueryMode: (mode) => set({ queryMode: mode, queryResult: null, error: null }),
+        setCustomSql: (sql) => set({ customSql: sql }),
       }),
       {
         name: 'iot-query-probe-reports',

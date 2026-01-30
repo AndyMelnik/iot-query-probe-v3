@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Clock,
   Filter,
+  Group,
   Plus,
   SortAsc,
   X,
@@ -92,6 +93,17 @@ export function ControlBarSection() {
         >
           <TimeRangeContent />
         </CollapsibleSection>
+
+        {/* Group By Section */}
+        <CollapsibleSection
+          title="Group By"
+          icon={Group}
+          isExpanded={expandedSections.includes("groupby")}
+          onToggle={() => toggleSection("groupby")}
+          badge={<GroupByBadge />}
+        >
+          <GroupByContent />
+        </CollapsibleSection>
       </div>
     </div>
   );
@@ -124,6 +136,16 @@ function TimeBadge() {
   return (
     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
       Active
+    </span>
+  );
+}
+
+function GroupByBadge() {
+  const { config } = useReportStore();
+  if (!config.groupBy || config.groupBy.length === 0) return null;
+  return (
+    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+      {config.groupBy.length}
     </span>
   );
 }
@@ -683,6 +705,133 @@ function TimeRangeContent() {
           </button>
         </>
       )}
+    </div>
+  );
+}
+
+// Group By Content - Only uses SELECTED fields
+function GroupByContent() {
+  const { config, addGroupBy, removeGroupBy, clearGroupBy } = useReportStore();
+
+  // Get selected fields with their field info
+  const selectedFieldsWithInfo = config.selectedFields
+    .map((sf) => {
+      const field = getEntityField(sf.entityId, sf.fieldId);
+      const entity = getEntity(sf.entityId);
+      return field && entity ? { entityId: sf.entityId, field, entity } : null;
+    })
+    .filter((f): f is NonNullable<typeof f> => f !== null);
+
+  // Fields not yet used in group by
+  const groupBy = config.groupBy || [];
+  const availableForGroupBy = selectedFieldsWithInfo.filter(
+    (sf) => !groupBy.some((g) => g.entityId === sf.entityId && g.fieldId === sf.field.id)
+  );
+
+  const handleAddGroupBy = () => {
+    if (availableForGroupBy.length > 0) {
+      const firstField = availableForGroupBy[0];
+      addGroupBy({
+        entityId: firstField.entityId,
+        fieldId: firstField.field.id,
+      });
+    }
+  };
+
+  if (selectedFieldsWithInfo.length === 0) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Group className="h-4 w-4" />
+        Select fields above to enable grouping
+      </div>
+    );
+  }
+
+  if (groupBy.length === 0) {
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">No grouping applied</span>
+        <button
+          onClick={handleAddGroupBy}
+          className="flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition-colors"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add group by
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {groupBy.map((group, index) => {
+        const fieldInfo = selectedFieldsWithInfo.find(
+          (f) => f.entityId === group.entityId && f.field.id === group.fieldId
+        );
+
+        return (
+          <div
+            key={`${group.entityId}-${group.fieldId}`}
+            className="flex items-center gap-2 rounded-lg border border-border bg-muted/30 p-2"
+          >
+            {index === 0 ? (
+              <span className="px-2 text-xs font-medium uppercase text-muted-foreground">BY</span>
+            ) : (
+              <span className="px-2 text-xs font-medium uppercase text-muted-foreground">THEN</span>
+            )}
+            <select
+              value={`${group.entityId}::${group.fieldId}`}
+              onChange={(e) => {
+                const [entityId, fieldId] = e.target.value.split("::");
+                // Remove old group and add new one
+                removeGroupBy(group.entityId, group.fieldId);
+                addGroupBy({ entityId, fieldId });
+              }}
+              className="h-8 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+            >
+              {/* Current field */}
+              {fieldInfo && (
+                <option value={`${group.entityId}::${group.fieldId}`}>
+                  {fieldInfo.entity.displayName}.{fieldInfo.field.displayName}
+                </option>
+              )}
+              {/* Available fields not yet used */}
+              {availableForGroupBy.map((f) => (
+                <option key={`${f.entityId}-${f.field.id}`} value={`${f.entityId}::${f.field.id}`}>
+                  {f.entity.displayName}.{f.field.displayName}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={() => removeGroupBy(group.entityId, group.fieldId)}
+              className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      })}
+      {availableForGroupBy.length > 0 && (
+        <div className="flex items-center gap-2 pt-2">
+          <button
+            onClick={handleAddGroupBy}
+            className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            <Plus className="h-4 w-4" />
+            Add another group
+          </button>
+          <span className="text-muted-foreground">·</span>
+          <button
+            onClick={clearGroupBy}
+            className="text-sm text-muted-foreground hover:text-destructive"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground mt-2">
+        💡 When grouping is applied, you may want to add aggregations (COUNT, SUM, AVG) to numeric fields in the Selected Fields section.
+      </p>
     </div>
   );
 }

@@ -158,6 +158,9 @@ export interface QueryColumn {
   fieldId?: string;
 }
 
+// Query Mode Types
+export type QueryMode = 'standard' | 'advanced';
+
 // Visualization Types
 export type VisualizationType = 'table' | 'line' | 'bar' | 'pie' | 'area' | 'scatter' | 'map';
 
