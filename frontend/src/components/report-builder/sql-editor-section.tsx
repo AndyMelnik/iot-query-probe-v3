@@ -8,7 +8,6 @@ import {
   Copy, 
   Check, 
   AlertTriangle,
-  Lightbulb,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
@@ -44,60 +43,6 @@ function highlightSql(sql: string): string {
   return highlighted;
 }
 
-// Example SQL queries
-const EXAMPLE_QUERIES = [
-  {
-    name: "Basic tracking data",
-    sql: `SELECT 
-  t.lat / 10000000.0 AS latitude,
-  t.lng / 10000000.0 AS longitude,
-  t.speed / 100.0 AS speed_kmh,
-  t.heading,
-  t.server_time
-FROM raw_telematics_data.tracking_data_core t
-WHERE t.server_time >= NOW() - INTERVAL '24 hours'
-ORDER BY t.server_time DESC
-LIMIT 1000`
-  },
-  {
-    name: "Vehicles with latest position",
-    sql: `SELECT 
-  v.label AS vehicle_name,
-  v.model,
-  t.lat / 10000000.0 AS latitude,
-  t.lng / 10000000.0 AS longitude,
-  t.speed / 100.0 AS speed_kmh,
-  t.server_time
-FROM raw_business_data.vehicles v
-JOIN raw_telematics_data.tracking_data_core t 
-  ON v.object_id = t.object_id
-WHERE t.server_time >= NOW() - INTERVAL '1 hour'
-ORDER BY t.server_time DESC
-LIMIT 500`
-  },
-  {
-    name: "Objects count by group",
-    sql: `SELECT 
-  g.label AS group_name,
-  COUNT(o.object_id) AS object_count
-FROM raw_business_data.groups g
-LEFT JOIN raw_business_data.objects o 
-  ON o.group_id = g.group_id
-GROUP BY g.group_id, g.label
-ORDER BY object_count DESC`
-  },
-  {
-    name: "Geofence entries/exits",
-    sql: `SELECT 
-  gf.label AS geofence_name,
-  COUNT(*) AS event_count,
-  gf.address
-FROM raw_business_data.geofences gf
-GROUP BY gf.geofence_id, gf.label, gf.address
-ORDER BY gf.label`
-  }
-];
-
 export function SqlEditorSection() {
   const { 
     customSql, 
@@ -113,7 +58,6 @@ export function SqlEditorSection() {
   } = useReportStore();
   
   const [copied, setCopied] = useState(false);
-  const [showExamples, setShowExamples] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
   const handleCopy = async () => {
@@ -189,11 +133,6 @@ export function SqlEditorSection() {
     }
   };
 
-  const loadExample = (sql: string) => {
-    setCustomSql(sql);
-    setShowExamples(false);
-  };
-
   const canRunQuery = customSql.trim().length > 0 && (isConnected || isAuthenticated);
 
   return (
@@ -208,36 +147,6 @@ export function SqlEditorSection() {
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Examples dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowExamples(!showExamples)}
-              className="flex items-center gap-1.5 rounded-md border border-border bg-background px-3 py-1.5 text-sm hover:bg-accent"
-            >
-              <Lightbulb className="h-4 w-4 text-amber-500" />
-              Examples
-              {showExamples ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-            </button>
-            
-            {showExamples && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setShowExamples(false)} />
-                <div className="absolute right-0 top-full z-20 mt-1 w-72 rounded-md border border-border bg-popover p-1 shadow-lg">
-                  {EXAMPLE_QUERIES.map((example, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => loadExample(example.sql)}
-                      className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent"
-                    >
-                      <Code2 className="h-4 w-4 text-muted-foreground" />
-                      {example.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-          
           <button
             onClick={handleCopy}
             disabled={!customSql}
@@ -252,15 +161,10 @@ export function SqlEditorSection() {
       {/* Editor Area */}
       <div className="p-4">
         {/* Warning */}
-        <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-          <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-500" />
-          <div>
-            <p className="font-medium text-amber-500">Security Notice</p>
-            <p className="text-muted-foreground">
-              Only SELECT queries are allowed. Coordinates use 10⁷ precision (divide by 10,000,000), 
-              speeds use 10² precision (divide by 100).
-            </p>
-          </div>
+        <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+          <AlertTriangle className="h-4 w-4 flex-shrink-0 text-amber-500" />
+          <p className="font-medium text-amber-500">Security Notice</p>
+          <span className="text-muted-foreground">— Only SELECT queries are allowed.</span>
         </div>
 
         {/* SQL Input */}
