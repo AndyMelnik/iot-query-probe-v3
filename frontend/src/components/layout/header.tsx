@@ -492,7 +492,8 @@ export function Header() {
             <BarChart3 className="h-4 w-4 text-primary" />
           </div>
           <span className="text-lg font-semibold tracking-tight">
-            IoT<span className="text-primary">Query</span>Probe
+            IoT Query Probe
+            <span className="text-muted-foreground font-normal"> — Report Builder</span>
           </span>
         </div>
       </div>
