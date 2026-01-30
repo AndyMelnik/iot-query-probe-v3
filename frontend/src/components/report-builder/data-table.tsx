@@ -13,7 +13,7 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { QueryResult } from "@/types/entities";
-import { cn, formatDate, formatNumber } from "@/lib/utils";
+import { cn, formatDate, formatTelematicsValue } from "@/lib/utils";
 
 interface DataTableProps {
   data: QueryResult;
@@ -46,7 +46,8 @@ export function DataTable({ data }: DataTableProps) {
           return formatDate(value as string, "datetime");
         }
         if (col.type === "number") {
-          return formatNumber(value as number);
+          // Use telematics-aware formatting (handles lat/lng with 10^7 precision, speed with 10^2 precision)
+          return formatTelematicsValue(value, col.name);
         }
         if (col.type === "boolean") {
           return value ? "Yes" : "No";

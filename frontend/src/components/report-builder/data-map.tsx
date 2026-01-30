@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { Map as MapIcon, Palette, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, convertCoordinate, formatTelematicsValue } from "@/lib/utils";
 import dynamic from "next/dynamic";
 
 interface QueryResult {
@@ -129,19 +129,18 @@ export function DataMap({ data }: DataMapProps) {
   }, [colorByValues]);
 
   // Process coordinates
+  // IoT Query stores lat/lng as integers with 10^7 precision for TimescaleDB performance
   const points = useMemo(() => {
     if (!latCol || !lonCol) return [];
 
     return data.rows
       .map((row, idx) => {
-        let lat = Number(row[latCol.name]);
-        let lon = Number(row[lonCol.name]);
+        const rawLat = Number(row[latCol.name]);
+        const rawLon = Number(row[lonCol.name]);
 
-        // Check if coordinates need to be divided by 10^7 (common in telematics)
-        if (Math.abs(lat) > 180 || Math.abs(lon) > 360) {
-          lat = lat / 10000000;
-          lon = lon / 10000000;
-        }
+        // Convert from integer format (10^7 precision) to decimal degrees
+        const lat = convertCoordinate(rawLat);
+        const lon = convertCoordinate(rawLon);
 
         // Validate coordinates
         if (isNaN(lat) || isNaN(lon) || (lat === 0 && lon === 0)) {
@@ -395,12 +394,12 @@ export function DataMap({ data }: DataMapProps) {
             <CircleMarker
               key={point.id}
               center={[point.latitude, point.longitude]}
-              radius={8}
+              radius={4}
               pathOptions={{
                 color: point.color,
                 fillColor: point.color,
                 fillOpacity: 0.8,
-                weight: 2,
+                weight: 1,
               }}
             >
               <Popup>
@@ -423,7 +422,7 @@ export function DataMap({ data }: DataMapProps) {
                             {col.displayName}
                           </td>
                           <td className="py-1">
-                            {formatValue(point.data[col.name], col.type)}
+                            {formatValue(point.data[col.name], col.type, col.name)}
                           </td>
                         </tr>
                       ))}
@@ -461,7 +460,7 @@ function FitBounds({ bounds }: { bounds: [[number, number], [number, number]] })
   return <MapHook bounds={bounds} />;
 }
 
-function formatValue(value: unknown, type: string): string {
+function formatValue(value: unknown, type: string, columnName: string): string {
   if (value === null || value === undefined) return "—";
   if (type === "datetime" || type === "date") {
     try {
@@ -470,8 +469,10 @@ function formatValue(value: unknown, type: string): string {
       return String(value);
     }
   }
-  if (type === "number" && typeof value === "number") {
-    return value.toLocaleString();
+  if (type === "number") {
+    // Use telematics-aware formatting for numeric values
+    const formatted = formatTelematicsValue(value, columnName);
+    return String(formatted);
   }
   return String(value);
 }

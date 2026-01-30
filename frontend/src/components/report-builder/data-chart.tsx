@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { QueryResult } from "@/types/entities";
-import { cn } from "@/lib/utils";
+import { cn, getTelematicsNumericValue, isSpeedColumn, isLatitudeColumn, isLongitudeColumn } from "@/lib/utils";
 import { ChevronDown, X, Palette } from "lucide-react";
 
 interface DataChartProps {
@@ -80,6 +80,7 @@ export function DataChart({ data }: DataChartProps) {
   }, [colorBy, data.rows]);
 
   // Transform data for charts - group by colorBy if set
+  // Handles telematics data conversion (lat/lng with 10^7 precision, speed with 10^2 precision)
   const chartData = useMemo(() => {
     const rows = data.rows.slice(0, 500);
     
@@ -89,8 +90,9 @@ export function DataChart({ data }: DataChartProps) {
         const transformed: Record<string, unknown> = {};
         allColumns.forEach((col) => {
           let value = row[col.name];
-          if (col.type === "number" && typeof value === "string") {
-            value = parseFloat(value);
+          if (col.type === "number") {
+            // Convert telematics values (lat/lng, speed) from integer format
+            value = getTelematicsNumericValue(value, col.name);
           }
           if ((col.type === "datetime" || col.type === "date") && value) {
             try {
@@ -113,8 +115,9 @@ export function DataChart({ data }: DataChartProps) {
       
       allColumns.forEach((col) => {
         let value = row[col.name];
-        if (col.type === "number" && typeof value === "string") {
-          value = parseFloat(value);
+        if (col.type === "number") {
+          // Convert telematics values (lat/lng, speed) from integer format
+          value = getTelematicsNumericValue(value, col.name);
         }
         if ((col.type === "datetime" || col.type === "date") && value) {
           try {
@@ -375,6 +378,11 @@ export function DataChart({ data }: DataChartProps) {
                 tickLine={{ stroke: "hsl(var(--border))" }}
                 tickFormatter={(value) => {
                   if (typeof value === 'number') {
+                    // Check if any Y-axis column is speed-related for unit display
+                    const hasSpeedColumn = yAxis.some(y => isSpeedColumn(y));
+                    if (hasSpeedColumn && yAxis.length === 1) {
+                      return value.toFixed(0) + ' km/h';
+                    }
                     if (Math.abs(value) >= 1000000) return (value / 1000000).toFixed(1) + 'M';
                     if (Math.abs(value) >= 1000) return (value / 1000).toFixed(1) + 'K';
                     return value.toFixed(0);
